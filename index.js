@@ -35,7 +35,7 @@ async function run() {
 
     // get all toys
     app.get("/all-toys", async (req, res) => {
-      const result = await toyCollection.find().limit(20).toArray();
+      const result = await toyCollection.find().sort({ createdAt: -1 }).limit(20).toArray();
       res.send(result);
     });
 
@@ -68,6 +68,15 @@ async function run() {
 
     })
 
+
+    app.post('/add-toy', async(req, res)=>{
+      const toyData = req.body;
+      console.log(toyData);
+      toyData.createdAt = new Date();
+
+      const result = await toyCollection.insertOne(toyData);
+      res.send(result)
+    })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
