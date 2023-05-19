@@ -68,6 +68,14 @@ async function run() {
 
     })
 
+    // get users toys by email which user added
+    app.get('/my-toy', async(req, res)=>{
+      const email = req.query.email;
+      console.log(email)
+      const query = {sellerEmail: email}
+      const result = await toyCollection.find(query).toArray();
+      res.send(result);
+    })
 
     app.post('/add-toy', async(req, res)=>{
       const toyData = req.body;
