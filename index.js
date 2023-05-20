@@ -24,7 +24,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    client.connect();
     const toyCollection = client.db("toyLand").collection("toys");
 
     // Creating index on subcategory fields
@@ -54,17 +54,31 @@ async function run() {
     // get toys by subCategory
     app.get("/toys-by-subCategory/:text", async (req, res) => {
       const subCategory = req.params.text;
-      console.log({ subCategory });
+
 
       const query = { subcategory: subCategory };
       const result = await toyCollection.find(query).toArray();
       return res.send(result);
     });
 
+    // pagination toy toys by subCategory
+    app.get("/pagination-by-subCategory/:text/:page", async (req, res) => {
+      const subCategory = req.params.text;
+
+      // subcategory pagination
+      const page = parseInt(req.params.page) || 1;
+      const limit =  4;
+      const skip = (page - 1) * limit;
+
+      const query = { subcategory: subCategory };
+      const result = await toyCollection.find(query).limit(limit).skip(skip).toArray();
+      return res.send(result);
+    });
+
+
     // search toys by name
     app.get("/toysByName/:searchText", async (req, res) => {
       const searchText = req.params.searchText;
-      
 
       const query = { name: { $regex: searchText, $options: "i" } };
       const result = await toyCollection.find(query).limit(20).toArray();
@@ -89,29 +103,35 @@ async function run() {
       res.send(result);
     });
 
-    // update toy details 
-    app.patch('/update-toy/:id', async(req, res)=>{
+    // update toy details
+    app.patch("/update-toy/:id", async (req, res) => {
       const id = req.params.id;
       const toyDetails = req.body;
       console.log(toyDetails);
 
-      const query = {_id : new ObjectId(id)}
+      const query = { _id: new ObjectId(id) };
       const updateToy = {
-        $set:{
-          ...toyDetails
-        }
-      }
+        $set: {
+          ...toyDetails,
+        },
+      };
       const result = await toyCollection.updateOne(query, updateToy);
-      res.send(result)
-    })
+      res.send(result);
+    });
 
     // toy delete
     app.delete("/delete-toy/:id", async (req, res) => {
       const id = req.params.id;
 
-      const query = {_id : new ObjectId(id)}
-      const result = await toyCollection.deleteOne(query)
-      res.send(result)
+      const query = { _id: new ObjectId(id) };
+      const result = await toyCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // pagination
+    app.get("/totalToys", async (req, res) => {
+      const result = await toyCollection.estimatedDocumentCount();
+      res.send({ totalToys: result });
     });
 
     // Send a ping to confirm a successful connection
