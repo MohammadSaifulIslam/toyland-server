@@ -55,7 +55,6 @@ async function run() {
     app.get("/toys-by-subCategory/:text", async (req, res) => {
       const subCategory = req.params.text;
 
-
       const query = { subcategory: subCategory };
       const result = await toyCollection.find(query).toArray();
       return res.send(result);
@@ -67,14 +66,17 @@ async function run() {
 
       // subcategory pagination
       const page = parseInt(req.params.page) || 1;
-      const limit =  4;
+      const limit = 4;
       const skip = (page - 1) * limit;
 
       const query = { subcategory: subCategory };
-      const result = await toyCollection.find(query).limit(limit).skip(skip).toArray();
+      const result = await toyCollection
+        .find(query)
+        .limit(limit)
+        .skip(skip)
+        .toArray();
       return res.send(result);
     });
-
 
     // search toys by name
     app.get("/toysByName/:searchText", async (req, res) => {
@@ -88,8 +90,20 @@ async function run() {
     // get users toys by email which user added
     app.get("/my-toy", async (req, res) => {
       const email = req.query.email;
+      const text = req.query.text;
 
       const query = { sellerEmail: email };
+      // sorting user toys by price
+      if (text == "low") {
+        const sort = { price: 1 };
+        const result = await toyCollection.find(query).sort(sort).toArray();
+        return res.send(result);
+      } else if (text == "high") {
+        const sort = { price: -1 };
+        const result = await toyCollection.find(query).sort(sort).toArray();
+        return res.send(result);
+      }
+
       const result = await toyCollection.find(query).toArray();
       res.send(result);
     });
@@ -128,11 +142,6 @@ async function run() {
       res.send(result);
     });
 
-    // pagination
-    app.get("/totalToys", async (req, res) => {
-      const result = await toyCollection.estimatedDocumentCount();
-      res.send({ totalToys: result });
-    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
