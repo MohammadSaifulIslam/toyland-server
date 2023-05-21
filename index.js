@@ -104,7 +104,7 @@ async function run() {
         return res.send(result);
       }
 
-      const result = await toyCollection.find(query).toArray();
+      const result = await toyCollection.find(query).sort({ createdAt: -1 }).toArray();
       res.send(result);
     });
 
@@ -142,6 +142,16 @@ async function run() {
       res.send(result);
     });
 
+
+    // toys by id
+    app.post('/toysById', async(req, res)=>{
+      const ids = req.body;
+      console.log(ids)
+      const objectIds = ids.map(id => new ObjectId(id))
+      const query =  { _id: { $in:  objectIds }} 
+      const result = await toyCollection.find(query).toArray();
+      res.send(result)
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
