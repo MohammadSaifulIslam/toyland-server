@@ -33,6 +33,26 @@ async function run() {
     const result = await toyCollection.createIndex(indexKeys, indexOptions);
     console.log(result);
 
+    // istimated data for pagination in all toys page
+    app.get("/totalToys", async (req, res) => {
+      const result = await toyCollection.estimatedDocumentCount();
+      res.send({ totalToys: result });
+    });
+
+    // pagination data send
+    app.get("/all-toys-pagination", async (req, res) => {
+      const page = parseInt(req.query.page) || 1;
+      const limit = 20;
+      const skip = (page - 1) * limit;
+
+      const result = await toyCollection
+        .find()
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+      res.send(result);
+    });
+
     // get all toys
     app.get("/all-toys", async (req, res) => {
       const result = await toyCollection
@@ -104,7 +124,10 @@ async function run() {
         return res.send(result);
       }
 
-      const result = await toyCollection.find(query).sort({ createdAt: -1 }).toArray();
+      const result = await toyCollection
+        .find(query)
+        .sort({ createdAt: -1 })
+        .toArray();
       res.send(result);
     });
 
@@ -142,16 +165,15 @@ async function run() {
       res.send(result);
     });
 
-
     // toys by id
-    app.post('/toysById', async(req, res)=>{
+    app.post("/toysById", async (req, res) => {
       const ids = req.body;
-      console.log(ids)
-      const objectIds = ids.map(id => new ObjectId(id))
-      const query =  { _id: { $in:  objectIds }} 
+      console.log(ids);
+      const objectIds = ids.map((id) => new ObjectId(id));
+      const query = { _id: { $in: objectIds } };
       const result = await toyCollection.find(query).toArray();
-      res.send(result)
-    })
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
